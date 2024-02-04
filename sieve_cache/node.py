@@ -13,7 +13,7 @@
 from dataclasses import dataclass
 import typing as ty
 
-from seive_cache.backends import base
+from dogpile.cache import api as base
 
 
 @dataclass
@@ -40,6 +40,9 @@ class Node:
             "next": self.next,
             "prev": self.prev,
         }
+
+    def __dict__(self):
+        return self.to_dict()
 
     def __getitem__(self, item):
         try:

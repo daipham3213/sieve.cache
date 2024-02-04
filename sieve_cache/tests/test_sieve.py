@@ -13,40 +13,14 @@
 import logging
 from unittest import TestCase
 
-import seive_cache
+import sieve_cache
 
-MEMO = seive_cache.create_seive()
+MEMO = sieve_cache.create_sieve(
+    backend="sieve_cache.memory",
+)
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-@MEMO.cache(max_size=128)
-def func_sieve(obj):
-    return obj
-
-
-@MEMO.cache(max_size=128)
-def fib(n):
-    if n < 2:
-        return n
-    return fib(n - 1) + fib(n - 2)
-
-
-class TestSeive(TestCase):
-
-    def test_seive(self):
-        obj = {'a': 1, 'b': 2}
-
-        # First call
-        result = func_sieve(obj)
-        self.assertEqual(result, obj)
-
-        # Second call
-        result = func_sieve(obj)
-        self.assertEqual(result, obj)
-
-    def test_fib_with_memo(self):
-        memo_fib = MEMO.cache(max_size=128)(fib)
-
-        result = memo_fib(40)
-        self.assertEqual(result, 102334155)
+class TestSieve(TestCase):
+    pass

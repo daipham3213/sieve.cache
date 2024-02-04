@@ -4,12 +4,12 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 <p class="align center">
-<h4><code>seive.cache</code> is a simple implementation for SIEVE cache algorithm.</h4>
+<h4><code>sieve.cache</code> is a simple implementation for SIEVE cache algorithm.</h4>
 </p>
 
 ## Installation
 ```bash
-pip install seive.cache
+pip install sieve.backends
 ```
 
 ## References
