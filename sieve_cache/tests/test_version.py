@@ -10,7 +10,12 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
-pbr>=6.0.0
-stevedore>=5.1.0
-dogpile.cache>=1.3.0
-iso8601>=2.1.0
+from unittest import TestCase
+
+from sieve_cache import version
+
+
+class TestVersionModule(TestCase):
+    def test_version_info_and_version_string_are_initialized(self):
+        self.assertIsNotNone(version.version_info)
+        self.assertIsNotNone(version.version_string)
