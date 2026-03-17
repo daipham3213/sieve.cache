@@ -29,7 +29,7 @@ dependencies = [
 redis = ["redis"]
 
 [project.entry-points."dogpile.cache"]
-sieve_cache.memory = "sieve_cache.backends.memory:InMemoryDriver"
+"sieve_cache.memory" = "sieve_cache.backends.memory:InMemoryDriver"
 
 [tool.setuptools.dynamic]
 version = { attr = "sieve_cache.version.version_string" }
