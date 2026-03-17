@@ -10,7 +10,21 @@
 #  License for the specific language governing permissions and limitations
 #  under the License.
 
-import pbr.version
+from importlib import metadata
 
-version_info = pbr.version.VersionInfo("seive_cache")
+
+class _VersionInfo:
+    def __init__(self, package_name):
+        self.package_name = package_name
+
+    def version_string(self):
+        for package_name in (self.package_name, "sieve_cache"):
+            try:
+                return metadata.version(package_name)
+            except metadata.PackageNotFoundError:
+                continue
+        return "0.0.0"
+
+
+version_info = _VersionInfo("seive_cache")
 version_string = version_info.version_string
