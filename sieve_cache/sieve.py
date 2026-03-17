@@ -38,9 +38,9 @@ class Sieve:
     into play.
     """
 
-    def __init__(self,
-                 backend: region.CacheRegion,
-                 namespace: str = DEFAULT_NAMESPACE):
+    def __init__(
+        self, backend: region.CacheRegion, namespace: str = DEFAULT_NAMESPACE
+    ):
         self.head: ty.Optional[_n.Node] = None
         self.tail: ty.Optional[_n.Node] = None
         self.hand: ty.Optional[_n.Node] = None
@@ -49,9 +49,14 @@ class Sieve:
         self.namespace = namespace
 
     @property
+    def _length_key(self) -> str:
+        namespace = self.namespace if self.namespace else DEFAULT_NAMESPACE
+        return f"{namespace}:{LEN_KEY}"
+
+    @property
     def length(self) -> int:
         """Return the length of the cache."""
-        key = LEN_KEY
+        key = self._length_key
         value = self._backend.get(key)
         if value == base.NO_VALUE or not isinstance(value, int):
             return 0
@@ -59,7 +64,7 @@ class Sieve:
 
     @length.setter
     def length(self, value: int) -> None:
-        key = LEN_KEY
+        key = self._length_key
         self._backend.set(key, value)
 
     def __len__(self):
@@ -98,6 +103,8 @@ class Sieve:
 
     def cache(self, max_size: int = DEFAULT_CACHE_SIZE) -> ty.Callable:
         """Decorator to backends the result of a function call."""
+        if max_size < 1:
+            raise ValueError("max_size must be greater than 0")
 
         def decorator(func) -> ty.Callable:
             key_generator = self._backend.function_key_generator(

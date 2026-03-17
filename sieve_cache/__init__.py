@@ -17,28 +17,32 @@ from dogpile.cache import util
 from sieve_cache import sieve
 from sieve_cache.common import exceptions
 
-__all__ = ["sieve", "create_sieve"]
+__all__ = ["sieve", "create_sieve", "create_region", "function_key_generator"]
 
-_BACKENDS = ['sieve_cache.memory',
-             'dogpile.cache.pymemcache',
-             'dogpile.cache.memcached',
-             'dogpile.cache.pylibmc',
-             'dogpile.cache.bmemcached',
-             'dogpile.cache.dbm',
-             'dogpile.cache.redis',
-             'dogpile.cache.memory',
-             'dogpile.cache.memory_pickle',
-             'dogpile.cache.null']
+_BACKENDS = [
+    "sieve_cache.memory",
+    "dogpile.cache.pymemcache",
+    "dogpile.cache.memcached",
+    "dogpile.cache.pylibmc",
+    "dogpile.cache.bmemcached",
+    "dogpile.cache.dbm",
+    "dogpile.cache.redis",
+    "dogpile.cache.memory",
+    "dogpile.cache.memory_pickle",
+    "dogpile.cache.null",
+]
 
-_DEFAULT_BACKEND = 'dogpile.cache.null'
+_DEFAULT_BACKEND = "dogpile.cache.null"
 
 
-def create_sieve(backend=_DEFAULT_BACKEND,
-                 *,
-                 config_prefix="cache.sieve",
-                 backend_arguments=None,
-                 namespace=None,
-                 **configs):
+def create_sieve(
+    backend=_DEFAULT_BACKEND,
+    *,
+    config_prefix="cache.sieve",
+    backend_arguments=None,
+    namespace=None,
+    **configs,
+):
     """Create a new Sieve instance.
 
     :param backend: The backend to use. Default is 'memory'.
@@ -53,11 +57,13 @@ def create_sieve(backend=_DEFAULT_BACKEND,
         raise exceptions.SieveCacheException(
             f"Invalid backend '{backend}'. Must be one of: {_BACKENDS}"
         )
-    configs = _build_config_opts(backend=backend,
-                                 prefix=config_prefix,
-                                 backend_arguments=backend_arguments,
-                                 **configs)
-    region.configure_from_config(configs, prefix='%s.' % config_prefix)
+    configs = _build_config_opts(
+        backend=backend,
+        prefix=config_prefix,
+        backend_arguments=backend_arguments,
+        **configs,
+    )
+    region.configure_from_config(configs, prefix="%s." % config_prefix)
 
     if region.key_mangler is None:
         region.key_mangler = _sha1_mangle_key
@@ -69,7 +75,7 @@ def _build_config_opts(
     backend=_DEFAULT_BACKEND,
     prefix="cache.sieve",
     backend_arguments=None,
-    **configs
+    **configs,
 ):
     """Build configuration options for dogpile.backends.
 
@@ -78,34 +84,41 @@ def _build_config_opts(
     :return: A dictionary of configuration options.
     """
     opts = {}
-    opts.setdefault('%s.backend' % prefix, backend)
-    opts.setdefault('%s.expiration_time' % prefix, 600)
+    opts.setdefault("%s.backend" % prefix, backend)
+    opts.setdefault("%s.expiration_time" % prefix, 600)
 
     for arg in backend_arguments or {}:
-        argname = '%s.arguments.%s' % (prefix, arg)
+        argname = "%s.arguments.%s" % (prefix, arg)
         argvalue = backend_arguments[arg]
 
-        memcache_backends = ('dogpile.backends.memcached',)
-        if backend in memcache_backends and arg == 'url':
-            argvalue = argvalue.split(',')
+        memcache_backends = ("dogpile.backends.memcached",)
+        if backend in memcache_backends and arg == "url":
+            argvalue = argvalue.split(",")
         opts[argname] = argvalue
 
-    memcache_servers = configs.get("memcache_servers") or ['localhost:11211']
-    opts.setdefault('%s.arguments.url' % prefix, memcache_servers)
+    memcache_servers = configs.get("memcache_servers") or ["localhost:11211"]
+    opts.setdefault("%s.arguments.url" % prefix, memcache_servers)
 
-    for arg in ('dead_retry', 'socket_timeout', 'pool_maxsize',
-                'pool_unused_timeout', 'pool_connection_get_timeout',
-                'pool_flush_on_reconnect', 'sasl_enabled', 'username',
-                'password'):
+    for arg in (
+        "dead_retry",
+        "socket_timeout",
+        "pool_maxsize",
+        "pool_unused_timeout",
+        "pool_connection_get_timeout",
+        "pool_flush_on_reconnect",
+        "sasl_enabled",
+        "username",
+        "password",
+    ):
         value = configs.get(arg)
-        opts['%s.arguments.%s' % (prefix, arg)] = value
+        opts["%s.arguments.%s" % (prefix, arg)] = value
 
-    if configs.get('tls_enabled', False):
-        tls_cafile = configs['tls_cafile']
+    if configs.get("tls_enabled", False):
+        tls_cafile = configs["tls_cafile"]
         tls_context = ssl.create_default_context(cafile=tls_cafile)
 
         if configs.get("enforce_fips_mode", False):
-            if hasattr(ssl, 'FIPS_mode'):
+            if hasattr(ssl, "FIPS_mode"):
                 ssl.FIPS_mode_set(1)
             else:
                 raise exceptions.SieveCacheException(
@@ -115,18 +128,15 @@ def _build_config_opts(
                     "FIPS mode by setting the 'enforce_fips_mode' "
                     "configuration option to 'False'."
                 )
-        tls_certfile = configs.get('tls_certfile')
-        tls_context.load_cert_chain(
-            tls_certfile,
-            configs["tls_keyfile"]
-        )
+        tls_certfile = configs.get("tls_certfile")
+        tls_context.load_cert_chain(tls_certfile, configs["tls_keyfile"])
 
-        tls_allowed_ciphers = configs.get('tls_allowed_ciphers')
+        tls_allowed_ciphers = configs.get("tls_allowed_ciphers")
         if tls_allowed_ciphers:
             tls_context.set_ciphers(tls_allowed_ciphers)
-        opts['%s.arguments.tls_context' % prefix] = tls_context
+        opts["%s.arguments.tls_context" % prefix] = tls_context
 
-    enable_socket_keepalive = configs.get('enable_socket_keepalive', False)
+    enable_socket_keepalive = configs.get("enable_socket_keepalive", False)
     if enable_socket_keepalive:
         if backend != "dogpile.backends.pymemcache":
             raise exceptions.SieveCacheException(
@@ -134,41 +144,42 @@ def _build_config_opts(
                 "for the 'pymemcache' backend."
             )
         import pymemcache
+
         socket_keepalive = pymemcache.KeepaliveOpts(
             idle=configs.get("socket_keepalive_idle", 7200),
             intvl=configs.get("socket_keepalive_interval", 75),
-            cnt=configs.get("socket_keepalive_count", 9))
-        opts['%s.arguments.socket_keepalive' % prefix] = socket_keepalive
+            cnt=configs.get("socket_keepalive_count", 9),
+        )
+        opts["%s.arguments.socket_keepalive" % prefix] = socket_keepalive
 
-    enable_retry_client = configs.get('enable_retry_client', False)
+    enable_retry_client = configs.get("enable_retry_client", False)
     if enable_retry_client:
-        if backend != 'dogpile.cache.pymemcache':
+        if backend != "dogpile.cache.pymemcache":
             msg = (
                 "Retry client is only supported by the "
                 "'dogpile.cache.pymemcache' backend."
             )
             raise exceptions.SieveCacheException(msg)
         import pymemcache
-        configs.setdefault('retry_attempts', 2)
-        configs.setdefault('retry_delay', 0)
-        configs.setdefault('dead_timeout', 60)
-        configs.setdefault('hashclient_retry_attempts', 2)
-        configs.setdefault('hashclient_retry_delay', 1)
 
-        opts['%s.arguments.enable_retry_client' % prefix] = True
-        opts['%s.arguments.retry_attempts' % prefix] = (
-            configs['retry_attempts']
-        )
-        opts['%s.arguments.retry_delay' % prefix] = configs['retry_delay']
-        opts['%s.arguments.hashclient_retry_attempts' % prefix] = (
-            configs['hashclient_retry_attempts']
-        )
-        opts['%s.arguments.hashclient_retry_delay' % prefix] = (
-            configs['hashclient_retry_delay']
-        )
-        opts['%s.arguments.dead_timeout' % prefix] = (
-            configs['dead_timeout']
-        )
+        configs.setdefault("retry_attempts", 2)
+        configs.setdefault("retry_delay", 0)
+        configs.setdefault("dead_timeout", 60)
+        configs.setdefault("hashclient_retry_attempts", 2)
+        configs.setdefault("hashclient_retry_delay", 1)
+
+        opts["%s.arguments.enable_retry_client" % prefix] = True
+        opts["%s.arguments.retry_attempts" % prefix] = configs[
+            "retry_attempts"
+        ]
+        opts["%s.arguments.retry_delay" % prefix] = configs["retry_delay"]
+        opts["%s.arguments.hashclient_retry_attempts" % prefix] = configs[
+            "hashclient_retry_attempts"
+        ]
+        opts["%s.arguments.hashclient_retry_delay" % prefix] = configs[
+            "hashclient_retry_delay"
+        ]
+        opts["%s.arguments.dead_timeout" % prefix] = configs["dead_timeout"]
     return opts
 
 
@@ -180,7 +191,7 @@ def _sha1_mangle_key(key):
     the key through.
     """
     try:
-        key = key.encode('utf-8', errors='xmlcharrefreplace')
+        key = key.encode("utf-8", errors="xmlcharrefreplace")
     except (UnicodeError, AttributeError):
         # NOTE(stevemar): if encoding fails just continue anyway.
         pass
@@ -193,7 +204,7 @@ def _key_generate_to_str(s):
     try:
         return str(s)
     except UnicodeEncodeError:
-        return s.encode('utf-8')
+        return s.encode("utf-8")
 
 
 def function_key_generator(namespace, fn, to_str=_key_generate_to_str):

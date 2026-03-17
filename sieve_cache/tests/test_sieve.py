@@ -14,13 +14,69 @@ import logging
 from unittest import TestCase
 
 import sieve_cache
-
-MEMO = sieve_cache.create_sieve(
-    backend="sieve_cache.memory",
-)
+from sieve_cache import create_region
+from sieve_cache import sieve
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 class TestSieve(TestCase):
-    pass
+    def test_create_sieve_rejects_invalid_backend(self):
+        with self.assertRaises(sieve_cache.exceptions.SieveCacheException):
+            sieve_cache.create_sieve(backend="invalid.backend")
+
+    def test_cache_returns_cached_value_without_recompute(self):
+        memo = sieve_cache.create_sieve(backend="dogpile.cache.memory")
+        calls = {"count": 0}
+
+        @memo.cache(max_size=8)
+        def get_value(number):
+            calls["count"] += 1
+            return number * 10
+
+        self.assertEqual(50, get_value(5))
+        self.assertEqual(50, get_value(5))
+        self.assertEqual(1, calls["count"])
+
+    def test_sieve_eviction_gives_second_chance_to_visited_node(self):
+        memo = sieve_cache.create_sieve(backend="dogpile.cache.memory")
+        calls = {1: 0, 2: 0, 3: 0}
+
+        @memo.cache(max_size=2)
+        def load(number):
+            calls[number] += 1
+            return number
+
+        self.assertEqual(1, load(1))
+        self.assertEqual(2, load(2))
+        self.assertEqual(1, load(1))
+        self.assertEqual(3, load(3))
+
+        self.assertEqual(1, load(1))
+        self.assertEqual(2, load(2))
+
+        self.assertEqual(1, calls[1])
+        self.assertEqual(2, calls[2])
+        self.assertEqual(1, calls[3])
+
+    def test_cache_rejects_non_positive_max_size(self):
+        memo = sieve_cache.create_sieve(backend="dogpile.cache.memory")
+
+        with self.assertRaises(ValueError):
+
+            @memo.cache(max_size=0)
+            def invalid_size_cache():
+                return "x"
+
+    def test_cache_length_is_namespaced(self):
+        region = create_region()
+        region.configure(backend="dogpile.cache.memory")
+
+        cache_a = sieve.Sieve(backend=region, namespace="a")
+        cache_b = sieve.Sieve(backend=region, namespace="b")
+
+        cache_a.length = 4
+        cache_b.length = 1
+
+        self.assertEqual(4, cache_a.length)
+        self.assertEqual(1, cache_b.length)

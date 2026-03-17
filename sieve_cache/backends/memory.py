@@ -15,7 +15,7 @@ from dogpile.cache import api
 
 from sieve_cache.common import timeutils
 
-__all__ = ['InMemoryDriver']
+__all__ = ["InMemoryDriver"]
 
 _NO_VALUE = api.NO_VALUE
 
@@ -33,7 +33,9 @@ class InMemoryDriver(api.CacheBackend):
     """
 
     def __init__(self, arguments: api.BackendArguments):
-        self.expiration_time = arguments.get('expiration_time', 0)
+        super().__init__(arguments)
+
+        self.expiration_time = arguments.get("expiration_time", 0)
         self.cache = {}
 
     def get(self, key: api.KeyType) -> api.BackendFormatted:
@@ -51,8 +53,7 @@ class InMemoryDriver(api.CacheBackend):
         return value
 
     def get_multi(
-        self,
-        keys: ty.Sequence[api.KeyType]
+        self, keys: ty.Sequence[api.KeyType]
     ) -> ty.Sequence[api.BackendFormatted]:
         """Retrieves the value for a list of keys."""
         yield from map(self.get, keys)
@@ -66,8 +67,7 @@ class InMemoryDriver(api.CacheBackend):
         self.set_multi({key: value})
 
     def set_multi(
-        self,
-        mapping: ty.Mapping[api.KeyType, api.BackendSetType]
+        self, mapping: ty.Mapping[api.KeyType, api.BackendSetType]
     ) -> None:
         """Set multiple values in the backends.
         Expunges expired keys during each set.
