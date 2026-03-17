@@ -31,6 +31,9 @@ jobs:
   upload-to-pypi:
     needs: build
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/sieve.cache
     permissions:
       id-token: write
 
@@ -44,4 +47,7 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          skip-existing: true
+          verify-metadata: false
+          verbose: true
           packages-dir: dist/
