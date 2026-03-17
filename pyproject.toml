@@ -3,9 +3,9 @@ requires = ["hatchling", "hatch-vcs", "hatch-requirements-txt"]
 build-backend = "hatchling.build"
 
 [project]
-name = "seive_cache"
+name = "sieve.cache"
 dynamic = ["version", "dependencies"]
-description = "A simple implementation of SEIVE caching algorithm"
+description = "A simple implementation of SIEVE caching algorithm"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
