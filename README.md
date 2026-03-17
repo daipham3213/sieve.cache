@@ -28,7 +28,7 @@ and removes the first unvisited candidate.
 Install from source:
 
 ```bash
-pip install -e .
+pip install sieve.cache
 ```
 
 ## Quick Usage
